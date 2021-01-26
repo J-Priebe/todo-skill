@@ -4,6 +4,7 @@ import sqlite3
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), 'database.sqlite3')
 
 # 'incomplete', 'complete', 'archived' (soft delete),
+# TODO define constants
 create_sql = '''
 CREATE TABLE IF NOT EXISTS items (
     id INTEGER PRIMARY KEY,
@@ -50,25 +51,25 @@ def add_item(item_description):
     conn.cursor().execute(sql)
     conn.commit()
 
-# TODO change status instead of hard deleting
-def delete_item_by_row_number(item_row_num):
+def close_item_by_row_number(item_row_num, close_status):
     # We cannot use PK for row number so we get the offset
     # and trust it's consistent since we are only reading/writing
     # from one local instance.
     # row number requires version 3. something and we only have 2.6.0
     # we can do this without row number simply by using offset
+    # TEST: duplicate descriptions where one is already closed
     offset = int(item_row_num) - 1
-    # TODO: parametrize
-    sql = f'''
-    DELETE FROM items
-    WHERE id IN
-    (
-    SELECT id FROM items LIMIT 1 OFFSET {offset}
-    )
+    sql = '''
+    UPDATE items
+    SET 
+        status = ?
+    WHERE status = 'incomplete'
+    LIMIT 1
+    OFFSET ?
     '''
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(sql)
+    cursor.execute(sql, (close_status, offset,))
     if cursor.rowcount == 1:
         conn.commit()
         conn.close()
@@ -77,20 +78,27 @@ def delete_item_by_row_number(item_row_num):
     return False
 
 
-def delete_item_by_description(item_description):
-    # TODO: tokenize to get better matches?
-    sql = f'''
-    DELETE FROM items
-    WHERE description LIKE '%{item_description}%'
+def close_item_by_description(item_description, close_status):
+    # TODO: tokenize description and construct
+    # ...OR LIKE... query to allow for partial matches
+    description_param = f'%{item_description}%'
+    sql = '''
+    UPDATE items
+    SET
+        status = ?
+    WHERE 
+        status = 'incomplete'
+        AND description LIKE ?
     '''
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(sql)
+    cursor.execute(sql, (close_status, description_param,))
     if cursor.rowcount == 1:
         conn.commit()
         conn.close()
         return True
     conn.close()
+
     return False
 
 
@@ -99,11 +107,29 @@ def get_active_items():
 
     sql = '''
     SELECT
-        description, status
+        description
     FROM items
-   
+    WHERE
+        status = 'incomplete'
     '''
 
     cursor = get_connection().cursor()
     cursor.execute(sql)
     return cursor.fetchall()
+
+
+def get_random_active_item():
+    sql = '''
+    SELECT
+        description
+    FROM items
+    WHERE
+        status = 'incomplete'
+    ORDER BY RANDOM()
+    LIMIT 1
+    '''
+    
+    cursor = get_connection().cursor()
+    cursor.execute(sql)
+    result = cursor.fetchone()
+    return result[0] if result else None
