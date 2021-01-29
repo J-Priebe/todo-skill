@@ -26,14 +26,6 @@ def init_db():
 
     return conn
 
-def get_todo_count():
-    conn = get_connection()
-
-    cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*) FROM items')
-
-    return cursor.fetchone()[0]
-
 
 def add_item(item_description):
     conn = get_connection()
@@ -43,13 +35,48 @@ def add_item(item_description):
         description
     )
     VALUES (
-        '{item_description}'
+        ?
     )
 
     '''
 
-    conn.cursor().execute(sql)
+    conn.cursor().execute(sql, (item_description,))
     conn.commit()
+
+def fetch_item(log, row_number):
+    log.info(row_number)
+    offset = int(row_number) - 1
+
+    sql = '''
+    SELECT id, description
+    FROM items
+    WHERE status = 'incomplete'
+    LIMIT 1
+    OFFSET ?
+    '''
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(sql, (offset,))
+    return cursor.fetchone()
+    #return result[0] if result else None
+
+
+def close_item(log, item_id, close_status):
+    log.info(f'item id: {item_id}, close status: {close_status}')
+    sql = '''
+    UPDATE items
+    SET 
+        status = ?
+    WHERE id = ?
+    LIMIT 1
+    '''
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(sql, (close_status, int(item_id),))
+    if cursor.rowcount == 1:
+        conn.commit()
+        return True
+    return False
 
 def close_item_by_row_number(item_row_num, close_status):
     # We cannot use PK for row number so we get the offset
@@ -133,3 +160,29 @@ def get_random_active_item():
     cursor.execute(sql)
     result = cursor.fetchone()
     return result[0] if result else None
+
+
+def get_num_completed_items():
+    sql = '''
+    SELECT COUNT(1)
+    FROM items
+    WHERE
+        status = 'complete'
+    '''
+    
+    cursor = get_connection().cursor()
+    cursor.execute(sql)
+    return cursor.fetchone()
+
+
+def get_average_completed_per_week():
+    # a little tricky. need to know
+    # # completed, timeframe (earliest started and now?),
+    # and timeframe converted to # of weeks
+    pass
+
+
+def get_average_time_to_completion():
+    '''
+
+    '''

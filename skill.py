@@ -73,16 +73,25 @@ class Todo(MycroftSkill):
     # delete kind of sounds like complete... just how good is the STT :)              
     @intent_handler('delete_item.intent')
     def handle_delete_item(self, message):
+        # TODO: item number one is read in a literally "one"
         item_number = message.data.get('item_number')
         item_description = message.data.get('item_description')
 
-        # TODO: confirmation followup conversation
-        success = False
-        if item_number:
-            success = db.close_item_by_row_number(item_number, 'archived')
-        elif item_description:
-            success = db.close_item_by_description(item_description, 'archived')
+        item = db.fetch_item(self.log, item_number)
+        self.log.info(item)
+
+        if item is None:
+            self.speak_dialog('could not find that')
+            return
         
+        pk, description = item
+        if not self.confirm_closure(description):
+            self.speak_dialog("OK, I won't delete that.")
+            return
+        
+        success = db.close_item(self.log, pk, 'archived')
+
+
         if success:
             self.speak_dialog('I deleted that for you')
         else:
@@ -119,3 +128,9 @@ class Todo(MycroftSkill):
     @intent_handler('help.intent')
     def handle_help(self, message):
         self.speak_dialog('coming soon')
+
+
+    def confirm_closure(self, item):
+        resp = self.ask_yesno(f'are you sure I should delete item {item}')
+        # can this be customized?
+        return resp == 'yes'
