@@ -47,7 +47,6 @@ def add_item(item_description):
 
 def fetch_item_by_row_number(row_number):
     offset = int(row_number) - 1
-
     sql = '''
     SELECT 
         id, 

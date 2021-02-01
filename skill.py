@@ -116,7 +116,6 @@ class Todo(MycroftSkill):
             weeks_delta  = math.ceil(
                 (latest_completed - earliest_created).total_seconds() / 604800 # seconds per week
             )
-            self.log.info(f'WEEKS DELTA: {weeks_delta}')
             average_completed_per_week = round(
                 num_completed / weeks_delta
             )
@@ -191,13 +190,16 @@ class Todo(MycroftSkill):
         # attempt to parse out a number (the item's position in the list)
         # from the identifier
         item_number = self.parse_item_number(identifier)
+        # truthy check also eliminates invalid nonpositive row numbers
         if item_number:
-            return db.fetch_item_by_row_number(item_number)
+            item = db.fetch_item_by_row_number(item_number)
+            if item is not None:
+                return item
         
         # and fall back to matching based on a description
         item = db.fetch_item_by_description(identifier)
         if item is None:
-            self.speak_dialog(f"I couldn't find {identifier} on your to do list")
+            self.speak_dialog(f"I couldn't find item {identifier} on your to do list")
 
         return item
 
