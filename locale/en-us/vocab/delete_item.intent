@@ -1,2 +1,1 @@
-(remove|scrap|delete) item number {item_number} from my to do list
-(remove|scrap|delete) {item_description} from my to do list
+(remove | cancel | delete) (item | ) (number | ) {item} (from | on | for) (my | ) to do list

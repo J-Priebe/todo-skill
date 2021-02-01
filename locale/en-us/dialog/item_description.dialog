@@ -1,1 +1,1 @@
-Item {item_number}: {item_description}
+Item {item_number}. {item_description}

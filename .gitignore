@@ -2,3 +2,4 @@ __pycache__/
 *.qmlc
 settings.json
 *.sqlite3
+*.sqlite
