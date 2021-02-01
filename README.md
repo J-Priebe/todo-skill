@@ -2,13 +2,20 @@
 Add, manage, track completion of tasks and to-dos
 
 ## About
-
+Simple to-do list manager that supports the following actions:
+- List items on you to-do list
+- Complete items
+- Delete (archive) items
+- Suggest a random item
+- Report completion statistics
 
 ## Examples
 * "What's on my to do list?"
-* "What's on my to-do list?"
-* "Give me my to-do list"
 * "Give me my to do list"
+* "Put 'go to the gym' on my to do list"
+* "Finish item "prepare for job interview" on my to do list"
+* "What should I do today?"
+* "Report on to do"
 
 ## Credits
 James Priebe

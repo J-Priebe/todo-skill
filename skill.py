@@ -93,7 +93,7 @@ class Todo(MycroftSkill):
         pk, description = item
         success = db.close_item(pk, 'complete')
         if success:
-            self.speak_dialog('I marked that one off for you. Nice job!')
+            self.speak_dialog('item_complete')
         else:
             self.speak_dialog(f'Sorry, I encountered a problem completing {identifier}')
 
