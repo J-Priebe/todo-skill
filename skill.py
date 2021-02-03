@@ -73,14 +73,14 @@ class Todo(MycroftSkill):
         
         pk, description = item
         if not self.confirm_delete(description):
-            self.speak_dialog("Okay, I won't delete that.")
+            self.speak_dialog('deleted_cancelled')
             return
         
         success = db.close_item(pk, 'archived')
         if success:
-            self.speak_dialog(f'Okay, I deleted {identifier} for you')
+            self.speak_dialog('delete_confirmed', {'item' : identifier})
         else:
-            self.speak_dialog(f'Sorry, I encountered a problem deleting {identifier}')
+            self.speak_dialog('delete_error', {'item': identifier})
 
 
     @intent_handler('complete_item.intent')
@@ -95,7 +95,7 @@ class Todo(MycroftSkill):
         if success:
             self.speak_dialog('item_complete')
         else:
-            self.speak_dialog(f'Sorry, I encountered a problem completing {identifier}')
+            self.speak_dialog('complete_error', {'item':identifier})
 
 
     @intent_handler('report.intent')
@@ -108,7 +108,7 @@ class Todo(MycroftSkill):
         '''
         num_completed = db.get_num_completed_items()
 
-        self.speak_dialog(f'You have completed {num_completed} items.')
+        self.speak_dialog('report_num_completed', {'num_completed': num_completed})
 
         earliest_created = db.get_earliest_created_time()
         latest_completed = db.get_latest_completed_time()
@@ -121,42 +121,19 @@ class Todo(MycroftSkill):
             )
             average_days_to_completion = db.get_average_days_to_completion()
             self.speak_dialog(
-                f'On average you complete {average_completed_per_week} items per week'
-                f' and take approximately {average_days_to_completion} days to complete'
-                ' each item.'
+                'report_averages',
+                {
+                    'average_completed_per_week': average_completed_per_week,
+                    'average_days_to_completion': average_days_to_completion
+                }
             )
 
 
     @intent_handler('help.intent')
     def handle_help(self, message):
-        self.speak_dialog(
-            'With this skill I can help you manage your to do list.'
-        )
-        self.speak_dialog(
-            'I can add, complete, or cancel items, suggest a random task'
-            ' for you to work on, or give you a report on your completed tasks.'
-        )
-        self.speak_dialog(
-            'Here are some examples.'
-        )
-        self.speak_dialog(
-            'Give me my to do list'
-        )
-        self.speak_dialog(
-            'Put go to the gym on my to do list'
-        )
-        self.speak_dialog(
-            'Cancel item number 1 on my to do list'
-        )
-        self.speak_dialog(
-            'Finish item prepare for job interview on my to do list'
-        )
-        self.speak_dialog(
-            'What should I do today'
-        )
-        self.speak_dialog(
-            'Report on to do'
-        )
+        self.speak_dialog('help_intro')
+        self.speak_dialog('help_examples')
+
 
     def parse_item_number(self, identifier):
         '''
@@ -199,11 +176,11 @@ class Todo(MycroftSkill):
         # and fall back to matching based on a description
         item = db.fetch_item_by_description(identifier)
         if item is None:
-            self.speak_dialog(f"I couldn't find item {identifier} on your to do list")
+            self.speak_dialog('item_not_found', {'item': identifier})
 
         return item
 
 
     def confirm_delete(self, item):
-        resp = self.ask_yesno(f'Are you sure you want to delete item {item}')
+        resp = self.ask_yesno('confirm_delete', {'item': item})
         return resp == 'yes'
