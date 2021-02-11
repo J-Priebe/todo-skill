@@ -1,0 +1,5 @@
+test: true
+test=true
+enclosure={'port': '/dev/ttyAMA0', 'rate': 9600, 'timeout': 5.0, 'update': True, 'test': False}
+foo=bar
+foo: bar
